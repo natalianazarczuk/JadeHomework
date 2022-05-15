@@ -10,15 +10,22 @@ public class AgentClient extends Agent {
     protected void setup() {
         addBehaviour(new SimpleBehaviour() {
             private boolean first = true;
+            private boolean accepted = false;
 
             @Override
             public void action() {
                 ACLMessage msg = receive();
-                if (msg != null && msg.getPerformative() == ACLMessage.PROPOSE) {
+                if (msg != null && msg.getPerformative() == ACLMessage.PROPOSE && !accepted) {
                     ACLMessage accept = msg.createReply();
                     accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-                    System.out.println("Client Agent: Yes, I want it");
+                    accept.setContent("Yes, I want it");
+                    send(accept);
+                    accepted = true;
+                    System.out.println("Client Agent: " + accept.getContent());
                 } else if (msg != null && msg.getPerformative() == ACLMessage.QUERY_REF) {
+                    String dish = null;
+                    int nr = (int) (Math.random() * 8 + 1);
+                    int h = (int) (Math.random() * 10 + 1);
                     String[] gateways = msg.getContent().split(" ");
                     for (String var : gateways) {
                         ACLMessage order = new ACLMessage(ACLMessage.QUERY_IF);
@@ -26,12 +33,23 @@ public class AgentClient extends Agent {
                         order.setLanguage("English");
                         order.setOntology("Reservation-Restaurant-Ontology");
 
-                        String dish = Math.random() < 0.5 ? "pierogi" : "kotlet";
-                        int nr = (int) (Math.random() * 8 + 1);
-                        int h = (int) (Math.random() * 10 + 1);
-                        order.setContent(dish + nr + "people" + h + "PM");
+                        //based on the restaurant, we want to order something different
+                        switch (var) {
+                            case "JarekGatewayAgent":
+                            case "BarbaraGatewayAgent":
+                                dish = Math.random() < 0.5 ? "pierogi " : "kotlet ";
+                                break;
+                            case "IzumiGatewayAgent":
+                                dish = Math.random() < 0.5 ? "sushi " : "ramen ";
+                                break;
+                            case "CroqueGatewayAgent":
+                                dish = Math.random() < 0.5 ? "quiche " : "crepes ";
+                                break;
+                        }
+
+                        order.setContent(dish + "for " + nr + " people " + h + "PM");
                         send(order);
-                        System.out.println("Client Agent: " + order.getContent());
+                        System.out.println("Client Agent ordered: " + order.getContent());
 
                     }
 
@@ -69,6 +87,7 @@ public class AgentClient extends Agent {
             public boolean done() {
                 return false;
             }
+
         });
     }
 }

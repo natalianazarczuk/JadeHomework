@@ -22,6 +22,11 @@ public class AgentDF extends Agent {
         pl.setName("JarekGatewayAgent");
         dfd.addServices(pl);
 
+        ServiceDescription pl2 = new ServiceDescription();
+        pl2.setType("polish");
+        pl2.setName("BarbaraGatewayAgent");
+        dfd.addServices(pl2);
+
         ServiceDescription jap = new ServiceDescription();
         jap.setType("japanese");
         jap.setName("IzumiGatewayAgent");
@@ -54,18 +59,25 @@ public class AgentDF extends Agent {
                         }
                     }
 
-                    ACLMessage reply = new ACLMessage(ACLMessage.QUERY_REF);
-                    reply.addReceiver(new AID("AgentClient", AID.ISLOCALNAME));
-                    reply.setLanguage("English");
-                    reply.setOntology("Reservation-Restaurant-Ontology");
 
                     if (restaurants.toString().isEmpty()){
-                        reply.setContent("No available restaurant");
+                        ACLMessage end = new ACLMessage(ACLMessage.REFUSE);
+                        end.addReceiver(new AID("AgentClient", AID.ISLOCALNAME));
+                        end.setLanguage("English");
+                        end.setOntology("Reservation-Restaurant-Ontology");
+                        end.setContent("No available restaurant");
+                        send(end);
+                        System.out.println("AgentDF response: " + end.getContent());
+
                     } else {
+                        ACLMessage reply = new ACLMessage(ACLMessage.QUERY_REF);
+                        reply.addReceiver(new AID("AgentClient", AID.ISLOCALNAME));
+                        reply.setLanguage("English");
+                        reply.setOntology("Reservation-Restaurant-Ontology");
                         reply.setContent(restaurants.toString());
+                        send(reply);
+                        System.out.println("AgentDF response: " + reply.getContent());
                     }
-                    send(reply);
-                    System.out.println("AgentDF response: " + reply.getContent());
                 }
             }
         });
